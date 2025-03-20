@@ -57,11 +57,6 @@ class Generator:
         self.enumerator = ThermoelasticEnumeration(nelx, nely)
         self.save_dir = save_dir
 
-    def create_problem(self):
-        problem = ThermoElastic2D()
-        problem.reset()
-        return problem
-
     def get_initial_design(self, condition):
         return condition['volfrac'] * np.ones((self.nelx, self.nely))
 

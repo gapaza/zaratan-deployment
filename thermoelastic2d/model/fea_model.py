@@ -166,6 +166,7 @@ class FeaModel:
         # OptiSteps records
         opti_steps = []
         design_steps = []
+        displacement_steps = []
 
         # 1. Initial Design
         x = self.get_initial_design(volfrac, nelx, nely) if x_init is None else x_init
@@ -323,6 +324,8 @@ class FeaModel:
                 opti_step = OptiStep(obj_values=obj_values, step=iterr)
                 opti_steps.append(opti_step)
                 design_steps.append(x.astype(np.float16))
+                displacement_steps.append(um.astype(np.float16))
+
 
             df0dx = df0dx_mat.reshape(nely * nelx, 1)
             df0dx = (h @ (xval * df0dx)) / hs[:, None] / np.maximum(1e-3, xval)  # Filtered sensitivity
@@ -388,6 +391,7 @@ class FeaModel:
             "volume_fraction": vf_error,
             "opti_steps": opti_steps,
             "design_steps": design_steps,
+            "displacement_steps": displacement_steps,
             "strain_energy_field": w,
             "von_mises_stress_field": vms,
         }

@@ -5,9 +5,7 @@ from matplotlib.animation import FuncAnimation
 import numpy as np
 import pickle
 import os
-
-DP_PATH = '/Users/gapaza/repos/datasets/thermoelastic2d/atbsuohzgyqt.pkl'
-
+import cv2
 
 def plot_conditions(
         heatsink_elements,
@@ -51,11 +49,10 @@ def plot_conditions(
     ax[1][2].axis("off")
     ax[1][2].set_title("Von Mises Stress")
     fig.colorbar(im7, ax=ax[1][2])
-
     fig.suptitle(sup_title)
-
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    plt.savefig(f'{sup_title}.png')
 
 
 
@@ -136,7 +133,8 @@ def parse_th(conditions):
         force_elements_y,
         design,
         w,
-        vms
+        vms,
+        sup_title='thermal'
     )
 
 
@@ -149,6 +147,9 @@ def parse_el(conditions):
     vms = np.array(opt_results['von_mises_stress_field']).T
     w = np.array(opt_results['strain_energy_field']).T
 
+    # resize vms to 65x65 with interpolation
+
+
     plot_conditions(
         heatsink_elements,
         fixed_elements,
@@ -156,7 +157,8 @@ def parse_el(conditions):
         force_elements_y,
         design,
         w,
-        vms
+        vms,
+        sup_title='elastic'
     )
 
 
@@ -175,38 +177,9 @@ def parse_mf(conditions):
         force_elements_y,
         design,
         w,
-        vms
+        vms,
+        sup_title='thermoelastic'
     )
-
-
-
-
-
-
-
-# Load the datapoint
-with open(DP_PATH, 'rb') as f:
-    datapoint = pickle.load(f)
-
-# Print keys of datapoint
-print(datapoint.keys())
-
-
-# --- ELASTIC ---
-elastic_data = datapoint['elastic']
-parse_el(elastic_data)
-plot_animation(elastic_data, title='design_history_elastic')
-
-# --- THERMAL ---
-thermal_data = datapoint['thermal']
-parse_th(thermal_data)
-plot_animation(thermal_data, title='design_history_thermal')
-
-# --- THERMOELASTIC ---
-thermoelastic_data = datapoint['thermoelastic']
-parse_mf(thermoelastic_data)
-plot_animation(thermoelastic_data, title='design_history_thermoelastic')
-
 
 
 
