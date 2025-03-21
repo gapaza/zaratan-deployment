@@ -61,10 +61,35 @@ Here, the boundary conditions for the thermoelastic design are the elastic and t
 
 
 
+## Dataset
+
+This code is capable of generating training, validation, and test datasets.
+The purpose of validation dataset is to assess how well the model generalizes to new combinations of seen boundary conditions.
+The purpose of the testing datasets is to assess how well the model can extrapolate to unseen boundary conditions.
+The parameter ranges covered in these datasets are show in the enumeration tables below:
+
+
+### Structural Enumeration Table
+| Parameters              | Training / Validation       | Test 1    | Test 2    | Test 3    | Test 4    | Test 5    | Test 6    | Test 7                   |
+|-------------------------|---------------------------|-----------|-----------|-----------|-----------|-----------|-----------|--------------------------|
+| Number of Supports     | {2, 3, 4}                 | {5, 6}    | ------    | ------    | ------    | ------    | ------    | ------                   |
+| Support Size (n-elements) | {1, 3, 5}             | ------    | {1, 7}    | ------    | ------    | ------    | ------    | ------                   |
+| Support Locations      | {L, T, LT, LTB}           | ------    | ------    | {LB}      | ------    | ------    | ------    | ------                   |
+| Number of Loads       | {1, 2}                     | ------    | ------    | ------    | {3, 4}    | ------    | ------    | ------                   |
+| Load Size (n-elements) | {1}                       | ------    | ------    | ------    | ------    | ------    | ------    | ------                   |
+| Load Directions       | {x, y}                     | ------    | ------    | ------    | ------    | {xy}      | ------    | ------                   |
+| Load Placements      | {R}                         | ------    | ------    | ------    | ------    | ------    | {B}       | ------                   |
+| Volume Fraction      | {0.25, 0.26, ..., 0.4}      | ------    | ------    | ------    | ------    | ------    | ------    | {0.2, 0.21, ..., 0.24}  |
 
 
 
-
+### Thermal Enumeration Table
+| Parameters            | Training / Validation       | Test 1    | Test 2    | Test 3    | Test 4                  |
+|-----------------------|---------------------------|-----------|-----------|-----------|--------------------------|
+| Number of Heatsinks  | {1, 2, 3}                 | {4, 5}    | ------    | ------    | ------                   |
+| Heatsink Size (n-elements) | {5, 9, 13, 17}       | ------    | {21, 25}  | ------    | ------                   |
+| Heatsink Locations  | {L, T, LT, LTB}           | ------    | ------    | {LB}      | ------                   |
+| Volume Fraction     | {0.25, 0.26, ..., 0.4}    | ------    | ------    | ------    | {0.2, ..., 0.24}        |
 
 
 
