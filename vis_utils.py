@@ -15,7 +15,8 @@ def plot_conditions(
         design,
         w,
         vms,
-        sup_title='Design'
+        sup_title='Design',
+        save_dir=None,
 ):
     # Plotting
     fig, ax = plt.subplots(2, 4, figsize=(8, 4))
@@ -36,7 +37,7 @@ def plot_conditions(
     ax[0][3].axis("off")
     ax[0][3].set_title("Heatsink")
 
-    im5 = ax[1][0].imshow(design, cmap='gray', interpolation='none', norm=colors.Normalize(vmin=0, vmax=1))
+    im5 = ax[1][0].imshow(-design, cmap='gray', interpolation='none', norm=colors.Normalize(vmin=-1, vmax=0))
     ax[1][0].axis("off")
     ax[1][0].set_title("Design")
 
@@ -51,13 +52,16 @@ def plot_conditions(
     fig.colorbar(im7, ax=ax[1][2])
     fig.suptitle(sup_title)
     plt.tight_layout()
-    # plt.show()
-    plt.savefig(f'{sup_title}.png')
+
+    if save_dir:
+        plt.savefig(os.path.join(save_dir, f'{sup_title}.png'))
+    else:
+        plt.savefig(f'{sup_title}.png')
 
 
 
 
-def plot_animation(conditions, title='design_history'):
+def plot_animation(conditions, title='design_history', save_dir=None):
     opt_results = conditions['optimization']
     design_steps = opt_results['design_steps']
     # print(len(design_steps))
@@ -73,7 +77,11 @@ def plot_animation(conditions, title='design_history'):
         return image_display,
 
     ani = FuncAnimation(fig, update, frames=len(images), interval=100, blit=True)
-    ani.save(os.path.join(f'{title}.gif'), writer='imagemagick', fps=5)
+
+    if save_dir is not None:
+        ani.save(os.path.join(save_dir, f'{title}.gif'), writer='imagemagick', fps=5)
+    else:
+        ani.save(os.path.join(f'{title}.gif'), writer='imagemagick', fps=5)
 
 
 
@@ -115,7 +123,7 @@ def get_boundary_tensors(conditions):
 
 
 
-def parse_th(conditions):
+def parse_th(conditions, save_dir=None):
     heatsink_elements, fixed_elements, force_elements_x, force_elements_y, volfrac_tensor = get_boundary_tensors(conditions)
     force_elements_x = np.zeros_like(force_elements_x)
     force_elements_y = np.zeros_like(force_elements_y)
@@ -134,11 +142,12 @@ def parse_th(conditions):
         design,
         w,
         vms,
-        sup_title='thermal'
+        sup_title='thermal',
+        save_dir=save_dir
     )
 
 
-def parse_el(conditions):
+def parse_el(conditions, save_dir=None):
     heatsink_elements, fixed_elements, force_elements_x, force_elements_y, volfrac_tensor = get_boundary_tensors(conditions)
     heatsink_elements = np.zeros_like(heatsink_elements)
 
@@ -158,11 +167,12 @@ def parse_el(conditions):
         design,
         w,
         vms,
-        sup_title='elastic'
+        sup_title='elastic',
+        save_dir=save_dir
     )
 
 
-def parse_mf(conditions):
+def parse_mf(conditions, save_dir=None):
     heatsink_elements, fixed_elements, force_elements_x, force_elements_y, volfrac_tensor = get_boundary_tensors(conditions)
 
     opt_results = conditions['optimization']
@@ -178,7 +188,8 @@ def parse_mf(conditions):
         design,
         w,
         vms,
-        sup_title='thermoelastic'
+        sup_title='thermoelastic',
+        save_dir=save_dir
     )
 
 

@@ -10,6 +10,19 @@ from thermoelastic2d.v0 import base_conditions
 from thermoelastic2d.model.fea_model import FeaModel
 
 
+
+def evaluate(config, design):
+    conditions = base_conditions
+    boundary_dict = dict(conditions)
+    for key, value in config.items():
+        if key in boundary_dict:
+            boundary_dict[key] = value
+
+    results = FeaModel(plot=False, eval_only=True).run(boundary_dict, x_init=design)
+    return results
+
+
+
 def optimize(config):
     datapoint = {}
 
