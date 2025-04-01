@@ -50,7 +50,7 @@ def optimize(config):
 
     # Multi-physics
     mp_conditions = deepcopy(boundary_dict)
-    mp_conditions['weight'] = 0.9  # 0.9 gives a better combination of thermal and structural
+    mp_conditions['weight'] = 0.5
     starting_point = np.ones((64, 64)) * boundary_dict['volfrac']
     mp_results = FeaModel(plot=False, eval_only=False).run(mp_conditions, x_init=starting_point)
     mp_conditions['optimization'] = mp_results

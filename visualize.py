@@ -1,5 +1,6 @@
 import argparse
 import pickle
+import config
 
 from vis_utils import parse_el, parse_th, parse_mf, plot_animation
 
@@ -10,7 +11,7 @@ def main():
     parser.add_argument(
         "--dp-path",
         type=str,
-        default="/Users/gapaza/repos/datasets/thermoelastic2d/bfimliapnmmn.pkl",
+        default="/Users/gapaza/repos/datasets/thermoelastic2dv3/buglgqpnwgwa.pkl",
         help="Path to the datapoint pickle file."
     )
     args = parser.parse_args()
@@ -23,7 +24,7 @@ def main():
     print(datapoint.keys())
 
     # --- SAVE DIR ---
-    save_dir = '/Users/gapaza/repos/ideal/zaratan-deployment/plots'
+    save_dir = config.plots_dir
 
     # --- ELASTIC ---
     elastic_data = datapoint['elastic']
