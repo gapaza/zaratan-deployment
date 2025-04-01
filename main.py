@@ -1,6 +1,7 @@
 import os
 import argparse
 from generator import Generator
+import time
 
 NELX = 64
 NELY = 64
@@ -32,6 +33,7 @@ if __name__ == '__main__':
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
+    start_time = time.time()
     gen = Generator(NELX, NELY, args.save_dir)
     gen.run_mp(
         me_dataset='training',
@@ -39,3 +41,5 @@ if __name__ == '__main__':
         sample_size=args.samples,
         num_processes=args.num_procs
     )
+    end_time = time.time()
+    print(f'Elapsed time: {end_time - start_time} seconds')
