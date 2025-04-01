@@ -20,6 +20,11 @@ if not os.path.exists(plots_dir):
     os.makedirs(plots_dir)
 
 
+datasets_dir = os.path.join(root_dir, 'datasets')
+if not os.path.exists(datasets_dir):
+    os.makedirs(datasets_dir)
+
+
 #      __  __           _      _
 #     |  \/  |         | |    | |
 #     | \  / | ___   __| | ___| |
