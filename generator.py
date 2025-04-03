@@ -18,7 +18,7 @@ from thermoelastic2d.model.fea_model import FeaModel
 
 ZERO_START = False
 ONE_START = False
-NOISY_START = True
+NOISY_START = False
 
 
 def get_seed_design(config):
