@@ -167,6 +167,9 @@ class FeaModel:
         opti_steps = []
         design_steps = []
         displacement_steps = []
+        temp_steps = []
+        vms_steps = []
+        w_steps = []
 
         # 1. Initial Design
         x = self.get_initial_design(volfrac, nelx, nely) if x_init is None else x_init
@@ -221,24 +224,20 @@ class FeaModel:
             curr_time = time.time()
 
             # --- Stress and Strain ---
-            if iterr == 1:
-
-                # Thermal Stress and Strain
+            # Mechanical Stress and Strain / Thermal Stress and Strain
+            if w1 == 0.0:
                 w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
-
-                # Mechanical Stress and Strain
+                vms = vms_th
+                w = w_th
+            elif w1 == 1.0:
                 w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
-
-                # Combine domains
-                if w1 == 0.0:
-                    vms = vms_th
-                    w = w_th
-                elif w1 == 1.0:
-                    vms = vms_me
-                    w = w_me
-                else:
-                    vms = vms_th + vms_me
-                    w = w_th + w_me
+                vms = vms_me
+                w = w_me
+            else:
+                w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
+                w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
+                vms = vms_th + vms_me
+                w = w_th + w_me
 
             # Plot design update
             if self.plot is True and (iterr % PLOTTING_FREQ == 0 or iterr == 1):
@@ -321,10 +320,13 @@ class FeaModel:
             else:
                 vf_error = np.abs(np.mean(x) - volfrac)
                 obj_values = [f0valm, f0valt, vf_error]
-                opti_step = OptiStep(obj_values=obj_values, step=iterr)
-                opti_steps.append(opti_step)
+                # opti_step = OptiStep(obj_values=obj_values, step=iterr)
+                opti_steps.append(obj_values)
                 design_steps.append(x.astype(np.float16))
                 displacement_steps.append(um.astype(np.float16))
+                vms_steps.append(vms.astype(np.float16))
+                w_steps.append(w.astype(np.float16))
+                temp_steps.append(uth.astype(np.float16))
 
 
             df0dx = df0dx_mat.reshape(nely * nelx, 1)
@@ -380,7 +382,7 @@ class FeaModel:
             if iterr > MAX_ITERATIONS:
                 break
 
-        print("Optimization finished...")
+        # print("Optimization finished...")
         vf_error = np.abs(np.mean(x) - volfrac)
 
         result = {
@@ -394,6 +396,9 @@ class FeaModel:
             "displacement_steps": displacement_steps,
             "strain_energy_field": w,
             "von_mises_stress_field": vms,
+            "von_mises_stress_field_steps": vms_steps,
+            "strain_energy_field_steps": w_steps,
+            "temp_steps": temp_steps,
         }
         return result
 

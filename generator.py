@@ -3,11 +3,37 @@ import os
 import numpy as np
 import pickle
 from copy import deepcopy
+from tqdm import tqdm
 import multiprocessing
+# multiprocessing.set_start_method('fork', force=True)
+# 5 designs - 86.73 sec previously
+# 9 designs - 121.0 seconds
+# 12 designs - 133.9 seconds
 
 from thermoelastic2d.conditions.thermoelastic_enum import ThermoelasticEnumeration
 from thermoelastic2d.v0 import base_conditions
 from thermoelastic2d.model.fea_model import FeaModel
+
+
+
+ZERO_START = False
+ONE_START = False
+NOISY_START = True
+
+
+def get_seed_design(config):
+    starting_point = np.ones((64, 64))
+    if ZERO_START is True:
+        starting_point = starting_point * 0.05
+    elif ONE_START is True:
+        starting_point = starting_point * 0.95
+    elif NOISY_START is True:
+        starting_point = starting_point * 0.5
+        starting_point += np.random.normal(0, 0.1, starting_point.shape)
+    else:
+        starting_point = starting_point * config['volfrac']
+    starting_point = np.clip(starting_point, 0.0, 1.0)
+    return starting_point
 
 
 
@@ -35,7 +61,7 @@ def optimize(config):
     # Pure structural
     me_conditions = deepcopy(boundary_dict)
     me_conditions['weight'] = 1.0
-    starting_point = np.ones((64, 64)) * boundary_dict['volfrac']
+    starting_point = get_seed_design(boundary_dict)
     me_results = FeaModel(plot=False, eval_only=False).run(me_conditions, x_init=starting_point)
     me_conditions['optimization'] = me_results
     datapoint['elastic'] = me_conditions
@@ -43,7 +69,7 @@ def optimize(config):
     # Pure thermal
     th_conditions = deepcopy(boundary_dict)
     th_conditions['weight'] = 0.0
-    starting_point = np.ones((64, 64)) * boundary_dict['volfrac']
+    starting_point = get_seed_design(boundary_dict)
     th_results = FeaModel(plot=False, eval_only=False).run(th_conditions, x_init=starting_point)
     th_conditions['optimization'] = th_results
     datapoint['thermal'] = th_conditions
@@ -51,7 +77,7 @@ def optimize(config):
     # Multi-physics
     mp_conditions = deepcopy(boundary_dict)
     mp_conditions['weight'] = 0.5
-    starting_point = np.ones((64, 64)) * boundary_dict['volfrac']
+    starting_point = get_seed_design(boundary_dict)
     mp_results = FeaModel(plot=False, eval_only=False).run(mp_conditions, x_init=starting_point)
     mp_conditions['optimization'] = mp_results
     datapoint['thermoelastic'] = mp_conditions
@@ -96,9 +122,13 @@ class Generator:
             file_path = os.path.join(self.save_dir, file_name)
             condition['save_path'] = file_path
 
-        # Use a multiprocessing pool to limit the number of concurrent processes
+        # # Use a multiprocessing pool to limit the number of concurrent processes
+        # with multiprocessing.Pool(processes=num_processes) as pool:
+        #     pool.map(optimize, conditions)
+
         with multiprocessing.Pool(processes=num_processes) as pool:
-            pool.map(optimize, conditions)
+            # imap_unordered yields results as soon as they're ready.
+            results = list(tqdm(pool.imap_unordered(optimize, conditions), total=len(conditions)))
 
 
 

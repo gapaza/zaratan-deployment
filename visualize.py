@@ -11,7 +11,7 @@ def main():
     parser.add_argument(
         "--dp-path",
         type=str,
-        default="/Users/gapaza/repos/datasets/thermoelastic2dv3/buglgqpnwgwa.pkl",
+        default="/Users/gapaza/repos/ideal/zaratan-deployment/datasets/thermoelastic2dv8/vdxckdzaxyun.pkl",
         help="Path to the datapoint pickle file."
     )
     args = parser.parse_args()
