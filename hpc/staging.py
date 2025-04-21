@@ -15,8 +15,6 @@ from thermoelastic2d.conditions.thermoelastic_enum import ThermoelasticEnumerati
 from thermoelastic2d.v0 import base_conditions
 from thermoelastic2d.model.fea_model import FeaModel
 
-
-
 ZERO_START = False
 ONE_START = False
 RAND_START = True
@@ -42,7 +40,6 @@ def get_seed_design(config):
     return starting_point
 
 
-
 def evaluate(config, design):
     conditions = base_conditions
     boundary_dict = dict(conditions)
@@ -52,7 +49,6 @@ def evaluate(config, design):
 
     results = FeaModel(plot=False, eval_only=True).run(boundary_dict, x_init=design)
     return results
-
 
 
 def optimize(config):
@@ -88,68 +84,47 @@ def optimize(config):
     mp_conditions['optimization'] = mp_results
     datapoint['thermoelastic'] = mp_conditions
 
-
-
     save_path = config['save_path']
     with open(save_path, 'wb') as f:
         pickle.dump(datapoint, f)
 
 
-class Generator:
-
+class StagingClient:
 
     def __init__(self, nelx, nely, save_dir):
         self.nelx = nelx
         self.nely = nely
         self.enumerator = ThermoelasticEnumeration(nelx, nely)
-        self.save_dir = save_dir
 
-    def get_initial_design(self, condition):
-        return condition['volfrac'] * np.ones((self.nelx, self.nely))
+        self.save_dir = save_dir
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        self.staging_dir = os.path.join(save_dir, 'staging')
+        if not os.path.exists(self.staging_dir):
+            os.makedirs(self.staging_dir)
+
+        self.datapoints_dir = os.path.join(save_dir, 'datapoints')
+        if not os.path.exists(self.datapoints_dir):
+            os.makedirs(self.datapoints_dir)
 
     def salt_string(self):
         return ''.join(np.random.choice(list(string.ascii_lowercase), 12))
 
-
-
-    def run(self, me_dataset='training', th_dataset='training', sample_size=1000):
-        conditions = self.enumerator.sample_conditions(me_dataset, th_dataset, sample_size=sample_size)
-
-        for condition in conditions:
-            file_name = self.salt_string() + '.pkl'
-            file_path = os.path.join(self.save_dir, file_name)
-            condition['save_path'] = file_path
-            optimize(condition)
-
-    def run_mp(self, me_dataset='training', th_dataset='training', sample_size=1000, num_processes=4):
+    def stage_dataset(self, me_dataset='training', th_dataset='training', sample_size=1000):
         conditions = self.enumerator.sample_conditions(me_dataset, th_dataset, sample_size=sample_size)
 
         # Prepare conditions with save_path for each case
         for condition in conditions:
-            file_name = self.salt_string() + '.pkl'
-            file_path = os.path.join(self.save_dir, file_name)
-            condition['save_path'] = file_path
+            condition['uid'] = self.salt_string()
+            file_name = condition['uid'] + '.pkl'
+            staging_path = os.path.join(self.staging_dir, file_name)
+            condition['staging_path'] = staging_path
+            condition['save_path'] = os.path.join(self.datapoints_dir, file_name)
 
-        # # Use a multiprocessing pool to limit the number of concurrent processes
-        # with multiprocessing.Pool(processes=num_processes) as pool:
-        #     pool.map(optimize, conditions)
-
-        with multiprocessing.Pool(processes=num_processes) as pool:
-            # imap_unordered yields results as soon as they're ready.
-            results = list(tqdm(pool.imap_unordered(optimize, conditions), total=len(conditions)))
-
-
-
-
-
-
-
-
-
-
-
-
-
+            # Save the condition to the staging path
+            with open(staging_path, 'wb') as f:
+                pickle.dump(condition, f)
 
 
 if __name__ == '__main__':
@@ -157,12 +132,29 @@ if __name__ == '__main__':
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    gen = Generator(64, 64, save_dir)
+    gen = StagingClient(64, 64, save_dir)
     # gen.run()
-    gen.run_mp(
+    gen.stage_dataset(
         me_dataset='training',
         th_dataset='training',
         sample_size=5,
-        num_processes=5
     )
+
+if __name__ == "__main__":
+    import argparse
+
+    # Parse the first argument as the config path
+    parser = argparse.ArgumentParser(description="Optimize the design.")
+    parser.add_argument('dataset_dir', type=str, help='Path to the configuration file')
+    args = parser.parse_args()
+    dataset_dir = args.dataset_dir
+
+    # Stage the dataset
+    gen = StagingClient(64, 64, dataset_dir)
+    gen.stage_dataset(
+        me_dataset='training',
+        th_dataset='training',
+        sample_size=5,
+    )
+
 

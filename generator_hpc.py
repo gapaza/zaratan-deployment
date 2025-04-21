@@ -95,17 +95,28 @@ def optimize(config):
         pickle.dump(datapoint, f)
 
 
-class Generator:
+class GeneratorHPC:
 
 
     def __init__(self, nelx, nely, save_dir):
         self.nelx = nelx
         self.nely = nely
         self.enumerator = ThermoelasticEnumeration(nelx, nely)
-        self.save_dir = save_dir
 
-    def get_initial_design(self, condition):
-        return condition['volfrac'] * np.ones((self.nelx, self.nely))
+
+        self.save_dir = save_dir
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        self.staging_dir = os.path.join(save_dir, 'staging')
+        if not os.path.exists(self.staging_dir):
+            os.makedirs(self.staging_dir)
+
+        self.datapoints_dir = os.path.join(save_dir, 'datapoints')
+        if not os.path.exists(self.datapoints_dir):
+            os.makedirs(self.datapoints_dir)
+
+
 
     def salt_string(self):
         return ''.join(np.random.choice(list(string.ascii_lowercase), 12))
@@ -137,6 +148,28 @@ class Generator:
         with multiprocessing.Pool(processes=num_processes) as pool:
             # imap_unordered yields results as soon as they're ready.
             results = list(tqdm(pool.imap_unordered(optimize, conditions), total=len(conditions)))
+
+
+
+
+    def stage_dataset(self, me_dataset='training', th_dataset='training', sample_size=1000):
+        conditions = self.enumerator.sample_conditions(me_dataset, th_dataset, sample_size=sample_size)
+
+        # Prepare conditions with save_path for each case
+        for condition in conditions:
+            condition['uid'] = self.salt_string()
+            file_name = condition['uid'] + '.pkl'
+            staging_path = os.path.join(self.staging_dir, file_name)
+            condition['staging_path'] = staging_path
+            condition['save_path'] = os.path.join(self.datapoints_dir, file_name)
+
+            # Save the condition to the staging path
+            with open(staging_path, 'wb') as f:
+                pickle.dump(condition, f)
+
+
+
+
 
 
 
