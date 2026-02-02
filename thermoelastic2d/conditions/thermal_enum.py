@@ -55,6 +55,15 @@ class ThermalEnumeration:
             # "volfrac": [round(x, 2) for x in np.arange(0.25, 0.41, 0.01)]
         }
 
+        # # Milad's Dataset parameters.
+        # self.default_params: Dict[str, List[Any]] = {
+        #     "num_heatsinks": [1],
+        #     "heatsink_size": [5, 9],
+        #     "heatsink_locations": ["B", "R"],
+        #     "volfrac": [0.3]
+        #     # "volfrac": [round(x, 2) for x in np.arange(0.25, 0.41, 0.01)]
+        # }
+
         # Test dataset overrides.
         self.test_overrides: Dict[str, Dict[str, List[Any]]] = {
             "test1": {"num_heatsinks": [4, 5]},

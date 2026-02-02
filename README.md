@@ -49,6 +49,69 @@ An example module-based call to the program with 5 samples and 5 processes might
 
 ```bash
 python3 -m main --num-procs 5 --samples 5 --save-dir /path/to/save/directory
+
+
+
+python3 -m main --num-procs 120 --samples 2000 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000
+
+
+
+python3 -m main --num-procs 120 --samples 2500 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv011
+
+
+
+
+python3 -m main --num-procs 2 --samples 2 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv009
+
+
+python3 -m visualize --dp-path /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test6/ggktotkqfbhr.pkl
+
+
+
+# -- Next-Gen Datasets --
+
+python3 -m main --num-procs 120 --samples 2500 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv020
+
+python3 -m visualize --dp-path /home/gapaza/scratch/datasets/thermoelastic2dv020/hatffmwlmodc.pkl
+
+
+
+python3 -m visualize --dp-path /home/gapaza/scratch/datasets/thermoelastic2dv009_test_V3/aaabtgwrimwb.pkl
+
+
+
+# -- Milad Datasets --
+
+
+python3 -m main --num-procs 2 --samples 2 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv100
+
+python3 -m main --num-procs 120 --samples 2500 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv100
+
+python3 -m visualize --dp-path /home/gapaza/scratch/datasets/thermoelastic2dv100/tmflwlpkwcru.pkl
+
+
+python3 -m visualize --dp-path /home/gapaza/scratch/datasets/thermoelastic2dv100/tmflwlpkwcru.pkl
+
+
+
+# -- Test datasets ---
+
+# Elastic
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test1 --el-dataset test1 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test2 --el-dataset test2 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test3 --el-dataset test3 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test4 --el-dataset test4 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test5 --el-dataset test5 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test6 --el-dataset test6 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_el_test7 --el-dataset test7
+
+# Thermal
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_th_test1 --th-dataset test1 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_th_test2 --th-dataset test2 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_th_test3 --th-dataset test3 && \
+python3 -m main --num-procs 100 --samples 100 --save-dir /home/gapaza/scratch/datasets/thermoelastic2dv000_th_test4 --th-dataset test4
+
+
 ```
 
 When the program finishes, there will be a set of pickle files in the specified directory.
@@ -99,6 +162,9 @@ The parameter ranges covered in these datasets are show in the enumeration table
 
 
 
+# Slurm
+
+sbatch ./slurm_dataset.sh
 
 
 

@@ -48,6 +48,19 @@ class ElasticEnumeration:
             # "volfrac": [round(x, 2) for x in np.arange(0.25, 0.41, 0.01)]
         }
 
+        # # Milad's Dataset parameters.
+        # self.default_params: Dict[str, List[Any]] = {
+        #     "num_supports": [2],
+        #     "support_size": [1, 3],
+        #     "support_locations": ["L", "T"],
+        #     "num_loads": [1],
+        #     "load_size": [1],
+        #     "load_directions": ["x", "y"],
+        #     "load_placements": ["R"],
+        #     "volfrac": [0.3]
+        #     # "volfrac": [round(x, 2) for x in np.arange(0.25, 0.41, 0.01)]
+        # }
+
         # Overrides for each test dataset.
         self.test_overrides: Dict[str, Dict[str, List[Any]]] = {
             "test1": {"num_supports": [5, 6]},

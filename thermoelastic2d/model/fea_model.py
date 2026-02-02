@@ -21,8 +21,8 @@ from thermoelastic2d.utils import plot_multi_physics
 
 SECOND_ITERATION_THRESHOLD = 2
 FIRST_ITERATION_THRESHOLD = 1
-MIN_ITERATIONS = 10
-MAX_ITERATIONS = 100
+MIN_ITERATIONS = 300
+MAX_ITERATIONS = 350
 UPDATE_THRESHOLD = 0.01
 PLOTTING_FREQ = 10
 
@@ -154,6 +154,12 @@ class FeaModel:
 
             If self.eval_only is True, returns a dictionary with keys 'structural_compliance', 'thermal_compliance', and 'volume_fraction' only.
         """
+        # MAX ITERATIONS
+        max_itr = bcs.get("max_iterations", MAX_ITERATIONS)
+        vms_init = None
+        w_init = None
+        
+        
         # WEIGHTING
         w1 = bcs.get("weight", 0.5)
         w2 = 1.0 - w1
@@ -171,12 +177,21 @@ class FeaModel:
         vms_steps = []
         w_steps = []
 
+        vms_steps_th = []
+        w_steps_th = []
+        vms_steps_me = []
+        w_steps_me = []
+
+        sensitivity_el_steps = []
+        sensitivity_th_steps = []
+
         # 1. Initial Design
         x = self.get_initial_design(volfrac, nelx, nely) if x_init is None else x_init
 
         # 2. Parameters
         penal = 3  # Penalty term
-        rmin = bcs["rmin"]  # Filter's radius
+        # rmin = bcs["rmin"]  # Filter's radius
+        rmin = 1.5
         e = 1.0  # Modulus of elasticity
         emin = 1e-9  # Minimum modulus of elasticity
         e0 = 1.0  # Initial modulus of elasticity
@@ -225,19 +240,35 @@ class FeaModel:
 
             # --- Stress and Strain ---
             # Mechanical Stress and Strain / Thermal Stress and Strain
+            # if w1 == 0.0:
+            #     w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
+            #     vms = vms_th
+            #     w = w_th
+            # elif w1 == 1.0:
+            #     w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
+            #     vms = vms_me
+            #     w = w_me
+            # else:
+            #     w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
+            #     w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
+            #     vms = vms_th + vms_me
+            #     w = w_th + w_me
+
+            w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
+            w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
             if w1 == 0.0:
-                w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
                 vms = vms_th
                 w = w_th
             elif w1 == 1.0:
-                w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
                 vms = vms_me
                 w = w_me
             else:
-                w_th, vms_th = calc_stress_strain_th(uth, bcs, tref, alpha, e, nu)
-                w_me, vms_me = calc_stress_strain_me(um, bcs, penal, e0, emin, nu)
                 vms = vms_th + vms_me
                 w = w_th + w_me
+
+            if iterr == 1:
+                vms_init = vms
+                w_init = w
 
             # Plot design update
             if self.plot is True and (iterr % PLOTTING_FREQ == 0 or iterr == 1):
@@ -274,8 +305,8 @@ class FeaModel:
             f0valt = 0
             df0dx_mat = np.zeros((nely, nelx))
 
-            df0dx_m = np.zeros((nely, nelx))
-            df0dx_t = np.zeros((nely, nelx))
+            df0dx_m = np.zeros((nely, nelx))  # Elastic sensitivity
+            df0dx_t = np.zeros((nely, nelx))  # Thermal sensitivity
 
             xval = x.reshape(n, 1)
             # DEFINE CONSTRAINTS
@@ -323,10 +354,24 @@ class FeaModel:
                 # opti_step = OptiStep(obj_values=obj_values, step=iterr)
                 opti_steps.append(obj_values)
                 design_steps.append(x.astype(np.float16))
-                displacement_steps.append(um.astype(np.float16))
+
                 vms_steps.append(vms.astype(np.float16))
                 w_steps.append(w.astype(np.float16))
-                temp_steps.append(uth.astype(np.float16))
+
+                vms_steps_me.append(vms_me.astype(np.float16))
+                w_steps_me.append(w_me.astype(np.float16))
+                vms_steps_th.append(vms_th.astype(np.float16))
+                w_steps_th.append(w_th.astype(np.float16))
+
+                # um has shape (2 * 65 * 65)
+                displacement_steps.append(um.astype(np.float16))
+
+                uth_re = np.reshape(uth, (nely + 1, nelx + 1))
+                temp_steps.append(uth_re.astype(np.float16))
+
+                # record sensitivity steps
+                sensitivity_el_steps.append(df0dx_m.astype(np.float32))
+                sensitivity_th_steps.append(df0dx_t.astype(np.float32))
 
 
             df0dx = df0dx_mat.reshape(nely * nelx, 1)
@@ -379,7 +424,7 @@ class FeaModel:
             #     f" It.: {iterr:4d} Obj.: {f0val:10.4f} Vol.: {np.sum(x) / (nelx * nely):6.3f} ch.: {change:6.3f} || t_forward:{t_forward:6.3f} + t_sensitivity:{t_sensitivity:6.3f} + t_sens_calc:{t_sensitivity_calc:6.3f} + t_mma: {t_mma:6.3f} = {t_total:6.3f}"
             # )
 
-            if iterr > MAX_ITERATIONS:
+            if iterr > max_itr:
                 break
 
         # print("Optimization finished...")
@@ -392,13 +437,25 @@ class FeaModel:
             "thermal_compliance": f0valt,
             "volume_fraction": vf_error,
             "opti_steps": opti_steps,
+            
+            "strain_energy_field": w_steps[0],
+            "von_mises_stress_field": vms_steps[0],
+            "temperature_field": temp_steps[0],
+
+            # Utilities for gradient learning
             "design_steps": design_steps,
-            "displacement_steps": displacement_steps,
-            "strain_energy_field": w,
-            "von_mises_stress_field": vms,
-            "von_mises_stress_field_steps": vms_steps,
-            "strain_energy_field_steps": w_steps,
-            "temp_steps": temp_steps,
+            # "displacement_steps": displacement_steps,
+
+            # Detailed utilities for gradient learning
+            # "strain_energy_field_steps_me": w_steps_me,
+            # "strain_energy_field_steps_th": w_steps_th,
+            # "von_mises_stress_field_steps_me": vms_steps_me,
+            # "von_mises_stress_field_steps_th": vms_steps_th,
+            # "temp_steps": temp_steps,
+            # "sensitivity_el_steps": sensitivity_el_steps,
+            # "sensitivity_th_steps": sensitivity_th_steps,
+
+            "iterations": iterr,
         }
         return result
 

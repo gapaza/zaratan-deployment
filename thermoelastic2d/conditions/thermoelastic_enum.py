@@ -30,7 +30,14 @@ class ThermoelasticEnumeration:
         self.elastic_enumerator = ElasticEnumeration(nelx, nely)
         self.thermal_enumerator = ThermalEnumeration(nelx, nely)
 
+        # Original volfrac set.
         self.volfrac_set = [round(x, 2) for x in np.arange(0.25, 0.41, 0.01)]
+
+        # # Milad's Dataset parameters.
+        # self.volfrac_set = [round(x, 2) for x in np.arange(0.20, 0.41, 0.05)]
+
+
+        self.volfrac_set_test = [round(x, 2) for x in np.arange(0.2, 0.25, 0.01)]
 
     def sample_conditions(self,
                           elastic_dataset: str = "training",
@@ -52,6 +59,10 @@ class ThermoelasticEnumeration:
         # Sample from each enumerator
         elastic_samples = self.elastic_enumerator.sample_conditions(elastic_dataset, sample_size=sample_size)
         thermal_samples = self.thermal_enumerator.sample_conditions(thermal_dataset, sample_size=sample_size)
+
+        if elastic_dataset == "test7" or thermal_dataset == "test4":
+            # For test7 and test4, use a different set of volume fractions.
+            self.volfrac_set = self.volfrac_set_test
 
 
         # Combine conditions by pairing a random elastic and a random thermal condition.

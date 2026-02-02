@@ -13,7 +13,7 @@ base_conditions = frozenset(
         ("force_elements_y", (bri[31])),
         ("heatsink_elements", (rci[31], rci[32], rci[33])),
         ("volfrac", 0.3),
-        ("rmin", 1.1),
+        ("rmin", 1.5),
         ("weight", 0.5),  # 1.0 for pure structural, 0.0 for pure thermal
     }
 )

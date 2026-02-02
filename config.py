@@ -1,5 +1,25 @@
 import os
 
+
+
+
+# --------------------------------------------------------------
+# Zaratan (HPC)
+# --------------------------------------------------------------
+using_hpc = True
+num_cpus = None
+if using_hpc is True:
+    slurm_cpu_ids = os.getenv('SLURM_JOB_CPUS_PER_NODE')
+    num_cpus = int(slurm_cpu_ids.split('(')[0])  # handles formats like "32(x2)"
+    # allocated_cpus = list(range(num_cpus))
+    start_cpu_id = list(os.sched_getaffinity(0))[0]  # Get the first CPU ID
+    allocated_cpus = list(range(start_cpu_id, start_cpu_id + num_cpus))
+    print(f"Set CPU affinity to CPUs: {allocated_cpus}")
+    os.sched_setaffinity(0, allocated_cpus)
+
+
+
+
 #
 #       _____   _                   _                _
 #      |  __ \ (_)                 | |              (_)
